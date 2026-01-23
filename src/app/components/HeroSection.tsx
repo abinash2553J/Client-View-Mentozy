@@ -1,6 +1,10 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 
-export function HeroSection() {
+interface HeroSectionProps {
+  onNavigate?: (page: 'home' | 'careers' | 'mentors' | 'tracks' | 'about' | 'contact', sectionId?: string) => void;
+}
+
+export function HeroSection({ onNavigate }: HeroSectionProps) {
   return (
     <section className="relative py-24 overflow-hidden bg-gradient-to-b from-white via-amber-50/40 to-white">
       <div className="container mx-auto px-6">

@@ -1,21 +1,23 @@
-import { Twitter, Linkedin, Instagram, Github, Send, Mail } from 'lucide-react';
+import { Twitter, Linkedin, Instagram, Send, Mail } from 'lucide-react';
+import type { Page } from '../App';
 
 interface FooterProps {
-  onNavigate: (page: 'home' | 'careers', sectionId?: string) => void;
+  onNavigate: (page: Page, sectionId?: string) => void;
 }
 
 export function Footer({ onNavigate }: FooterProps) {
   const links = {
     platform: [
-        { label: 'Browse Mentors', action: () => onNavigate('home', 'opportunities') },
-        { label: 'Learning Tracks', action: () => onNavigate('home', 'learning-tracks') },
-        { label: 'Opportunities', action: () => onNavigate('home', 'opportunities') },
+        { label: 'Browse Mentors', action: () => onNavigate('mentors') },
+        { label: 'Learning Tracks', action: () => onNavigate('tracks') },
+        { label: 'Success Stories', action: () => onNavigate('home', 'opportunities') },
         { label: 'Pricing', action: () => onNavigate('home', 'pricing') }
     ],
     company: [
-        { label: 'About Us', action: () => onNavigate('home') },
+        { label: 'About Us', action: () => onNavigate('about') },
         { label: 'Careers', action: () => onNavigate('careers') }, 
-        { label: 'Contact', action: () => window.location.href = "mailto:wearementozy@gmail.com" },
+        { label: 'Contact', action: () => onNavigate('contact') },
+        { label: 'Become a Mentor', action: () => onNavigate('contact') },
     ],
     legal: [
         { label: 'Privacy Policy', action: () => {} },
@@ -29,8 +31,6 @@ export function Footer({ onNavigate }: FooterProps) {
       <div className="container mx-auto px-6">
         
         <div className="grid lg:grid-cols-4 gap-12 mb-16">
-          
-          {/* Brand Column */}
           <div className="lg:col-span-1">
             <div 
                 className="flex items-center gap-2 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
@@ -45,7 +45,6 @@ export function Footer({ onNavigate }: FooterProps) {
               Democratizing mentorship for everyone. We connect ambitious learners with world-class experts.
             </p>
             
-            {/* Newsletter */}
             <div className="relative mb-6">
               <input 
                 type="email" 
@@ -63,7 +62,6 @@ export function Footer({ onNavigate }: FooterProps) {
             </div>
           </div>
 
-          {/* Links Grid */}
           <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>
               <h4 className="font-bold text-gray-900 mb-6">Platform</h4>
@@ -104,7 +102,6 @@ export function Footer({ onNavigate }: FooterProps) {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-400">
             © {new Date().getFullYear()} Mentozy Inc. All rights reserved.
