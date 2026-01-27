@@ -29,7 +29,7 @@ export function HeroSection({ onNavigate }: HeroSectionProps) {
               </h1>
 
               <p className="text-lg text-gray-600 max-w-xl leading-relaxed">
-                Not just courses — real people, real guidance.  
+                Not just courses — real people, real guidance.
                 Learn from seniors, mentors, and professionals who genuinely want to help you grow.
               </p>
             </div>
