@@ -1,4 +1,4 @@
-import { Search, Filter, Star, Linkedin, Loader2, Calendar, Globe, MapPin, User, Building2, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Search, Filter, Star, Linkedin, Loader2, Calendar, User, Building2, ShieldCheck } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { getMentors, Mentor, createBooking } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
@@ -45,10 +45,10 @@ export function MentorsPage() {
     setSelectedMentor(mentor);
   };
 
-  const handleConfirmBooking = async (date: Date, timeSlot: string) => {
+  const handleConfirmBooking = async (date: Date, _timeSlot: string, duration?: string, note?: string) => {
     if (!selectedMentor || !user) return false;
     const scheduledTime = date.toISOString();
-    const success = await createBooking(user.id, selectedMentor.id, scheduledTime);
+    const success = await createBooking(user.id, selectedMentor.id, scheduledTime, duration, note);
     if (success) {
       toast.success(`Session requested with ${selectedMentor.name}! Check your dashboard.`);
       navigate('/student-dashboard');

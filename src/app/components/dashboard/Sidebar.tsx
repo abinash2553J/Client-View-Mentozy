@@ -18,6 +18,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const studentItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/student-dashboard' },
         { icon: BookOpen, label: 'Courses', path: '/courses' },
+        { icon: User, label: 'Mentors', path: '/mentors' }, // Added Mentors link
         { icon: Calendar, label: 'Calendar', path: '/calendar' },
         { icon: MessageSquare, label: 'Messages', path: '/messages' },
         { icon: PieChart, label: 'Analytics', path: '/analytics' },
