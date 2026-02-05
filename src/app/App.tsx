@@ -21,6 +21,7 @@ const StudentOnboardingPage = lazy(() => import('./pages/StudentOnboardingPage')
 const MentorOnboardingPage = lazy(() => import('./pages/MentorOnboardingPage').then(module => ({ default: module.MentorOnboardingPage })));
 const MentorDashboardPage = lazy(() => import('./pages/MentorDashboardPage').then(module => ({ default: module.MentorDashboardPage })));
 const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage').then(module => ({ default: module.StudentDashboardPage })));
+const DashboardMentorsPage = lazy(() => import('./pages/DashboardMentorsPage').then(module => ({ default: module.DashboardMentorsPage })));
 
 // New Pages
 const TeacherTypeSelectionPage = lazy(() => import('./pages/TeacherTypeSelectionPage').then(module => ({ default: module.TeacherTypeSelectionPage })));
@@ -95,12 +96,11 @@ function App() {
           <Route path="/plans" element={<PlansPage />} />
           <Route path="/careers" element={<CareerPage />} />
           <Route path="/mentors" element={<MentorsPage />} />
+
           {/* Auth/Dashboard pages moved to standalone routes below */}
           <Route path="/tracks" element={<TracksPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
-          {/* Catch-all Route for paths with layout */}
-          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         {/* Auth Pages without Layout (or custom layout manually) */}
@@ -203,6 +203,11 @@ function App() {
             <CalendarPage />
           </Suspense>
         } />
+        <Route path="/dashboard-mentors" element={
+          <Suspense fallback={<PageLoader />}>
+            <DashboardMentorsPage />
+          </Suspense>
+        } />
         <Route path="/messages" element={
           <Suspense fallback={<PageLoader />}>
             <MessagesPage />
@@ -223,6 +228,9 @@ function App() {
             <CertificationsPage />
           </Suspense>
         } />
+
+        {/* Catch-all Route */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AuthProvider>
   );
