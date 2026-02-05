@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Calendar, MessageSquare, PieChart, Award, LogOut, X, User } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Calendar, MessageSquare, PieChart, Award, LogOut, X, User, Users } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
 interface SidebarProps {
@@ -18,6 +18,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const studentItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/student-dashboard' },
         { icon: BookOpen, label: 'Courses', path: '/courses' },
+        { icon: Users, label: 'Mentors', path: '/dashboard-mentors' },
         { icon: Calendar, label: 'Calendar', path: '/calendar' },
         { icon: MessageSquare, label: 'Messages', path: '/messages' },
         { icon: PieChart, label: 'Analytics', path: '/analytics' },
@@ -34,7 +35,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         { icon: User, label: 'Profile', path: '/mentor-profile' },
     ];
 
-    const isMentorPath = location.pathname.startsWith('/mentor');
+    const isMentorPath = location.pathname.startsWith('/mentor-');
     const isMentor = role === 'mentor' || role === 'organization' || isMentorPath;
 
     const navItems = isMentor ? mentorItems : studentItems;
