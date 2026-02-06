@@ -1,4 +1,5 @@
-import { X, Clock, Link, FileText, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { X, Clock, Link, FileText, ExternalLink, DollarSign, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { Booking } from '../../../lib/api';
 
 interface StudentBookingDetailsModalProps {
@@ -102,27 +103,41 @@ export function StudentBookingDetailsModal({ isOpen, onClose, booking }: Student
                         Reasonable assumption: Mentor adds their QR code (Scanner) for payment collection if not done automatically.
                         So Student needs to SEE this image to PAY.
                     */}
-                    {booking.payment_proof_url && (
+                    {/* Payment Link / UPI */}
+                    {booking.payment_link && (
                         <div>
                             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <ImageIcon className="w-3.5 h-3.5" /> Payment / Scanner
+                                <DollarSign className="w-3.5 h-3.5" /> Payment / UPI ID
                             </h3>
-                            <div className="rounded-xl overflow-hidden border border-gray-200">
-                                <img
-                                    src={booking.payment_proof_url}
-                                    alt="Payment Scanner"
-                                    className="w-full h-auto object-cover max-h-64"
-                                />
-                                <div className="bg-gray-50 p-2 text-center">
+                            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between group">
+                                <div className="truncate min-w-0 flex-1 mr-4">
+                                    <p className="text-xs text-emerald-600 font-bold uppercase mb-0.5">Payment Details</p>
+                                    <p className="font-mono text-sm font-medium text-gray-800 truncate select-all">
+                                        {booking.payment_link}
+                                    </p>
+                                </div>
+                                {booking.payment_link.startsWith('http') ? (
                                     <a
-                                        href={booking.payment_proof_url}
+                                        href={booking.payment_link}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="text-xs font-bold text-indigo-600 hover:underline"
+                                        className="p-2 bg-white text-emerald-600 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition-colors shadow-sm"
+                                        title="Open Link"
                                     >
-                                        View Full Image
+                                        <ExternalLink className="w-4 h-4" />
                                     </a>
-                                </div>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(booking.payment_link || '');
+                                            toast.success("Copied to clipboard!");
+                                        }}
+                                        className="p-2 bg-white text-emerald-600 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition-colors shadow-sm"
+                                        title="Copy to Clipboard"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )}

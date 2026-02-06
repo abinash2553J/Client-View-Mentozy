@@ -113,7 +113,7 @@ export interface Booking {
     scheduled_at: string;
     meeting_link?: string;
     mentor_note?: string; // [NEW] Link note
-    payment_proof_url?: string; // [NEW] Payment scanner
+    payment_link?: string; // [NEW] Payment Link / UPI ID
     mentors?: Mentor; // Joined data (Student View)
     profiles?: Profile; // Joined data (Mentor View: Student info)
 }
@@ -537,6 +537,8 @@ export const getStudentBookings = async (userId: string): Promise<Booking[]> => 
                 status: b.status,
                 scheduled_at: b.mentor_availability?.start_time || new Date().toISOString(),
                 meeting_link: b.meeting_link,
+                mentor_note: b.mentor_note,
+                payment_link: b.payment_link,
                 mentors: mappedMentor
             } as Booking;
         });
@@ -610,6 +612,8 @@ export const getMentorBookings = async (userId: string): Promise<Booking[]> => {
             status: b.status,
             scheduled_at: b.mentor_availability?.start_time || new Date().toISOString(),
             meeting_link: b.meeting_link,
+            mentor_note: b.mentor_note,
+            payment_link: b.payment_link,
             profiles: b.profiles
         })) as Booking[];
     } catch (e) {
@@ -639,46 +643,19 @@ export const updateBookingStatus = async (bookingId: string, status: 'confirmed'
     }
 };
 
-export const acceptBooking = async (bookingId: string, meetingLink: string, note?: string, paymentImage?: File | null): Promise<boolean> => {
+export const acceptBooking = async (bookingId: string, meetingLink: string, note?: string, paymentLink?: string): Promise<boolean> => {
     try {
         const supabase = getSupabase();
         if (!supabase) return false;
 
-        let paymentUrl = null;
-
-        // 1. Upload Payment Image if provided
-        if (paymentImage) {
-            const fileExt = paymentImage.name.split('.').pop();
-            const fileName = `${bookingId}-payment.${fileExt}`;
-            const filePath = `payment-proofs/${fileName}`;
-
-            // Try to upload (might fail if bucket doesn't exist/permissions, so we catch)
-            try {
-                const { error: uploadError } = await supabase.storage
-                    .from('public-assets') // fallback to public bucket if dedicated not avail
-                    .upload(filePath, paymentImage, { upsert: true });
-
-                if (!uploadError) {
-                    const { data } = supabase.storage.from('public-assets').getPublicUrl(filePath);
-                    paymentUrl = data.publicUrl;
-                } else {
-                    console.warn("Upload failed, using mock URL:", uploadError);
-                    // fallback mock for demo
-                    paymentUrl = "https://images.unsplash.com/photo-1635338002621-c4d67393d25d?q=80&w=600&auto=format&fit=crop";
-                }
-            } catch (uErr) {
-                console.warn("Upload logic error:", uErr);
-            }
-        }
-
-        // 2. Update Booking Record
+        // Update Booking Record
         const { error } = await supabase
             .from('bookings')
             .update({
                 status: 'confirmed',
                 meeting_link: meetingLink,
                 mentor_note: note,
-                payment_proof_url: paymentUrl
+                payment_link: paymentLink
             })
             .eq('id', bookingId);
 

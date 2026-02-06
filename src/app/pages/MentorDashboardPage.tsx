@@ -100,10 +100,10 @@ export function MentorDashboardPage() {
         setAcceptModalOpen(true);
     };
 
-    const handleConfirmAccept = async (meetingLink: string, note: string, paymentImage: File | null) => {
+    const handleConfirmAccept = async (meetingLink: string, note: string, paymentLink: string) => {
         if (!selectedBooking) return false;
 
-        const success = await acceptBooking(selectedBooking.id, meetingLink, note, paymentImage);
+        const success = await acceptBooking(selectedBooking.id, meetingLink, note, paymentLink);
 
         if (success) {
             toast.success("Session Accepted Successfully");
