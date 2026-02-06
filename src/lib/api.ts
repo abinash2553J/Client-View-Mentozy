@@ -143,21 +143,58 @@ export const getMentors = async (): Promise<Mentor[]> => {
 
         return dbMentors.map((item) => {
             const name = item.profiles?.full_name || 'Expert Mentor';
-            const role = item.bio ? item.bio.split('.')[0] : 'Instructor';
+
+            let bioText = item.bio;
+            let role = 'Instructor';
+            let company = item.company || 'Global Expert';
+            let type: 'online' | 'offline' | undefined = undefined;
+
+            // Try to parse bio if it looks like JSON
+            if (item.bio && (item.bio.trim().startsWith('{') || item.bio.trim().startsWith('['))) {
+                try {
+                    const parsed = JSON.parse(item.bio);
+                    // Extract fields from JSON if they exist
+                    if (parsed.role) role = parsed.role;
+                    if (parsed.company) company = parsed.company; // If JSON has company, verify if we should use it
+                    if (parsed.type) type = parsed.type;
+
+                    // Use a clean description if available, otherwise construct one or default
+                    if (parsed.description) {
+                        bioText = parsed.description;
+                    } else if (parsed.bio) {
+                        bioText = parsed.bio;
+                    } else {
+                        // If no specific bio text in JSON, generate a generic one based on expertise
+                        const skills = item.mentor_expertise?.map((e) => e.skill).join(', ') || 'Modern Technologies';
+                        bioText = `Specializing in ${skills} and industry leadership.`;
+                    }
+                } catch (e) {
+                    // unexpected JSON format, keep original text but clean up if needed
+                    console.warn("Failed to parse mentor bio JSON", e);
+                    bioText = item.bio; // Fallback to raw if parse fails
+                }
+            } else {
+                // Regular text bio
+                if (item.bio) {
+                    role = item.bio.split('.')[0];
+                    if (role.length > 30) role = 'Instructor'; // Safety check if first sentence is too long
+                }
+            }
 
             return {
                 id: item.id,
                 name: name,
                 role: role,
-                company: item.company || 'Global Expert',
+                company: company,
                 expertise: item.mentor_expertise?.map((e) => e.skill) || ["Technology"],
                 rating: Number(item.rating) || 5.0,
                 reviews: item.total_reviews || 0,
                 image: item.profiles?.avatar_url || 'bg-amber-500/10 text-amber-600',
                 initials: name.split(' ').map((n: string) => n[0]).join('').substring(0, 2),
-                bio: item.bio || undefined,
+                bio: bioText || undefined,
                 years_experience: item.years_experience || 5,
                 hourly_rate: item.hourly_rate || 20,
+                type: type
             };
         });
     } catch (e) {
