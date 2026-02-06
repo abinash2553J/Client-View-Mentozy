@@ -42,6 +42,7 @@ interface DBTrack {
 
 export interface Mentor {
     id: number;
+    user_id: string;
     name: string;
     role: string;
     company: string;
@@ -117,6 +118,15 @@ export interface Booking {
     payment_link?: string; // [NEW] Payment Link / UPI ID
     mentors?: Mentor; // Joined data (Student View)
     profiles?: Profile; // Joined data (Mentor View: Student info)
+}
+
+export interface Message {
+    id: string;
+    sender_id: string;
+    receiver_id: string;
+    content: string;
+    created_at: string;
+    is_read: boolean;
 }
 
 // Fallback Data - CALIBRATED: Prices $15-$75, Natural Ratings
@@ -198,6 +208,7 @@ export const getMentors = async (): Promise<Mentor[]> => {
 
             return {
                 id: item.id,
+                user_id: item.user_id,
                 name: name,
                 role: role,
                 company: item.company || 'Global Expert',
@@ -401,6 +412,7 @@ export const getStudentBookings = async (userId: string): Promise<Booking[]> => 
                 const m = b.mentors;
                 mappedMentor = {
                     id: m.id,
+                    user_id: m.user_id,
                     name: m.profiles?.full_name || 'Unknown Mentor',
                     role: m.bio ? m.bio.split('.')[0] : 'Expert',
                     company: m.company || 'Independent',
@@ -603,53 +615,126 @@ export interface Contact {
     status: 'online' | 'offline';
 }
 
-export const getContacts = async (userId: string, role: 'student' | 'mentor'): Promise<Contact[]> => {
+// Messages
+export const getMessages = async (userId1: string, userId2: string): Promise<Message[]> => {
     try {
         const supabase = getSupabase();
         if (!supabase) return [];
 
-        // If I am a student, the user wants me to see OTHER STUDENTS ("logged in students"), not Mentors.
-        if (role === 'student') {
-            // Fetch other students
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('id, full_name, avatar_url')
-                .eq('role', 'student')
-                .neq('id', userId); // Exclude myself
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${userId1},receiver_id.eq.${userId2}),and(sender_id.eq.${userId2},receiver_id.eq.${userId1})`)
+            .order('created_at', { ascending: true });
 
-            if (error) {
-                console.error("Error fetching peer students:", error);
-                return [];
-            }
-
-            return data.map((profile: any) => ({
-                id: profile.id,
-                name: profile.full_name || 'Student',
-                role: 'student',
-                avatar: profile.avatar_url,
-                status: Math.random() > 0.4 ? 'online' : 'offline', // Simulation
-                lastMessage: 'Hey, are you studying?'
-            }));
+        if (error) {
+            console.error("Error fetching messages:", error);
+            return [];
         }
-        // If I am a mentor, I want to see Students who booked me
-        else {
-            const bookings = await getMentorBookings(userId);
-            // Deduplicate students
-            const uniqueStudents = new Map<string, Contact>();
+
+        return data as Message[];
+    } catch (e) {
+        console.error("Unexpected error in getMessages:", e);
+        return [];
+    }
+};
+
+export const sendMessage = async (senderId: string, receiverId: string, content: string): Promise<Message | null> => {
+    try {
+        const supabase = getSupabase();
+        if (!supabase) return null;
+
+        const { data, error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: senderId,
+                receiver_id: receiverId,
+                content: content
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error sending message:", error);
+            return null;
+        }
+
+        return data as Message;
+    } catch (e) {
+        console.error("Unexpected error in sendMessage:", e);
+        return null;
+    }
+};
+
+export const getContacts = async (userId: string, role: string): Promise<Contact[]> => {
+    try {
+        const supabase = getSupabase();
+        if (!supabase) return [];
+
+        // 1. Get Peer Contacts (Same Role)
+        const { data: peers, error: peerError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, role')
+            .eq('role', role)
+            .neq('id', userId);
+
+        if (peerError) console.error("Error fetching peer contacts:", peerError);
+
+        // 2. Get Functional Contacts (Mentor-Student)
+        let functionalContacts: Contact[] = [];
+        if (role === 'student') {
+            // Student sees Mentors they have bookings with
+            const bookings = await getStudentBookings(userId);
+            const mentorMap = new Map<string, Contact>();
             bookings.forEach(b => {
-                if (b.profiles && !uniqueStudents.has(b.profiles.id)) {
-                    uniqueStudents.set(b.profiles.id, {
+                if (b.mentors?.user_id && !mentorMap.has(b.mentors.user_id)) {
+                    mentorMap.set(b.mentors.user_id, {
+                        id: b.mentors.user_id,
+                        name: b.mentors.name,
+                        role: 'mentor',
+                        avatar: b.mentors.image,
+                        status: Math.random() > 0.4 ? 'online' : 'offline',
+                        lastMessage: b.mentor_note || 'Session booked'
+                    });
+                }
+            });
+            functionalContacts = Array.from(mentorMap.values());
+        } else {
+            // Mentor sees Students who booked them
+            const bookings = await getMentorBookings(userId);
+            const studentMap = new Map<string, Contact>();
+            bookings.forEach(b => {
+                if (b.profiles && !studentMap.has(b.profiles.id)) {
+                    studentMap.set(b.profiles.id, {
                         id: b.profiles.id,
                         name: b.profiles.full_name,
                         role: 'student',
                         avatar: b.profiles.avatar_url,
-                        status: Math.random() > 0.5 ? 'online' : 'offline', // Simulation as requested
-                        lastMessage: b.mentor_note || 'New booking request'
+                        status: Math.random() > 0.5 ? 'online' : 'offline',
+                        lastMessage: 'Student booking'
                     });
                 }
             });
-            return Array.from(uniqueStudents.values());
+            functionalContacts = Array.from(studentMap.values());
         }
+
+        // 3. Map Peers to Contact format
+        const peerContacts: Contact[] = (peers || []).map((p: any) => ({
+            id: p.id,
+            name: p.full_name || 'User',
+            role: p.role,
+            avatar: p.avatar_url,
+            status: Math.random() > 0.6 ? 'online' : 'offline',
+            lastMessage: 'New contact'
+        }));
+
+        // 4. Combine and Deduplicate (just in case)
+        const allContactsMap = new Map<string, Contact>();
+        [...functionalContacts, ...peerContacts].forEach(c => {
+            allContactsMap.set(c.id, c);
+        });
+
+        return Array.from(allContactsMap.values());
     } catch (e) {
         console.error("Error fetching contacts:", e);
         return [];
@@ -658,6 +743,7 @@ export const getContacts = async (userId: string, role: 'student' | 'mentor'): P
 
 // Update Mentor Status
 export const updateMentorStatus = async (userId: string, status: 'active' | 'unavailable'): Promise<boolean> => {
+    // ... existing code
     try {
         const supabase = getSupabase();
         if (!supabase) return false;
