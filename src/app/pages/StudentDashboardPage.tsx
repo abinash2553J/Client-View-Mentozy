@@ -230,7 +230,7 @@ export function StudentDashboardPage() {
                                         <div className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold text-white uppercase tracking-widest border border-white/20 inline-block mb-4">Trending</div>
                                         <h3 className="text-2xl font-bold text-white mb-2">UX & Branding Mastery</h3>
                                         <p className="text-rose-100 text-sm mb-6 max-w-[200px]">Learn to design products that customers actually love.</p>
-                                        <button className="inline-flex items-center justify-center px-6 py-2.5 bg-white text-rose-600 rounded-xl font-bold text-sm hover:bg-rose-50 transition-colors">Explorer Now</button>
+                                        <Link to="/tracks" className="inline-flex items-center justify-center px-6 py-2.5 bg-white text-rose-600 rounded-xl font-bold text-sm hover:bg-rose-50 transition-colors">Explorer Now</Link>
                                     </div>
                                     <Heart className="absolute -bottom-6 -right-6 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-500" />
                                 </div>
