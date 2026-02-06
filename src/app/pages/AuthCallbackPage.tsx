@@ -1,59 +1,48 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getSupabase } from '../../lib/supabase';
-import { getUserProfile } from '../../lib/api';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 
 export function AuthCallbackPage() {
-    const navigate = useNavigate();
-
     useEffect(() => {
-        const handleAuthCallback = async () => {
+        const handleRedirect = async () => {
             const supabase = getSupabase();
-            if (!supabase) {
-                navigate('/login');
-                return;
-            }
+            if (!supabase) return;
 
-            // The session might already be available via onAuthStateChange in AuthContext,
-            // but we want to ensure we handle the redirection logic correctly here.
-            const { data: { session }, error } = await supabase.auth.getSession();
-
-            if (error || !session) {
-                console.error("Auth callback error:", error);
-                navigate('/login');
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = '/login';
                 return;
             }
 
             try {
-                const profile = await getUserProfile(session.user.id);
-                const role = profile?.role || session.user.user_metadata?.role || 'student';
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
 
-                console.log("AUTH CALLBACK: Detected Role:", role);
+                if (error) throw error;
 
-                if (role === 'mentor' || role === 'teacher') {
-                    navigate('/mentor-dashboard');
-                    toast.success("Welcome back, Mentor!");
+                if (profile && (profile.role === 'mentor' || profile.role === 'teacher')) {
+                    window.location.href = '/mentor-dashboard';
                 } else {
-                    navigate('/student-dashboard');
-                    toast.success("Successfully logged in!");
+                    window.location.href = '/student-dashboard';
                 }
             } catch (err) {
-                console.error("Error in auth callback profile check:", err);
-                navigate('/student-dashboard'); // Fallback
+                console.error("Error in auth callback:", err);
+                window.location.href = '/student-dashboard'; // Fallback
             }
         };
 
-        handleAuthCallback();
-    }, [navigate]);
+        handleRedirect();
+    }, []);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 font-sans">
             <div className="text-center space-y-4">
                 <Loader2 className="w-10 h-10 text-amber-500 animate-spin mx-auto" />
                 <h2 className="text-xl font-bold text-gray-900">Completing login...</h2>
-                <p className="text-gray-500">Redirecting you to your dashboard.</p>
+                <p className="text-gray-500 text-sm font-medium">Redirecting you to your dashboard.</p>
             </div>
         </div>
     );
