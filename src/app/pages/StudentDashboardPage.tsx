@@ -9,6 +9,7 @@ import { DashboardLayout } from '../components/dashboard/DashboardLayout';
 import { Enrollment, Profile, Booking, getStudentEnrollments, getUserProfile, getStudentBookings } from '../../lib/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar } from '../../components/ui/calendar';
+import { StudentBookingDetailsModal } from '../components/booking/StudentBookingDetailsModal';
 
 export function StudentDashboardPage() {
     const { user } = useAuth();
@@ -17,6 +18,10 @@ export function StudentDashboardPage() {
     const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Modal State
+    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
     useEffect(() => {
         const loadDashboardData = async () => {
@@ -63,6 +68,11 @@ export function StudentDashboardPage() {
         if (e.key === 'Enter') {
             navigate(`/tracks?search=${e.currentTarget.value}`);
         }
+    };
+
+    const handleBookingClick = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setDetailsModalOpen(true);
     };
 
     return (
@@ -260,7 +270,11 @@ export function StudentDashboardPage() {
                         <div className="space-y-3 w-full mt-6">
                             {featureBookings.length > 0 ? (
                                 featureBookings.slice(0, 3).map(booking => (
-                                    <div key={booking.id} className="p-3 bg-indigo-50 rounded-xl flex items-start gap-3">
+                                    <div
+                                        key={booking.id}
+                                        className="p-3 bg-indigo-50 rounded-xl flex items-start gap-3 cursor-pointer hover:bg-indigo-100 transition-colors"
+                                        onClick={() => handleBookingClick(booking)}
+                                    >
                                         <div className="w-1 h-10 bg-indigo-500 rounded-full"></div>
                                         <div>
                                             <h4 className="font-bold text-gray-900 text-xs">{booking.mentors?.name || 'Mentor Session'}</h4>
@@ -315,6 +329,13 @@ export function StudentDashboardPage() {
 
                 </div>
             </div>
+
+
+            <StudentBookingDetailsModal
+                isOpen={detailsModalOpen}
+                onClose={() => setDetailsModalOpen(false)}
+                booking={selectedBooking}
+            />
         </DashboardLayout >
     );
 }
