@@ -3,12 +3,12 @@ import { useLocation } from 'react-router-dom';
 import {
     Search, Send, Paperclip,
     AtSign, Smile, Phone, Video,
-    Info, Users, GraduationCap,
-    Circle, Loader2
+    Info, Users,
+    Circle, Loader2, MessageSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
-import { Contact, getContacts, Message, getMessages, sendMessage } from '../../lib/api';
+import { Contact, getContacts, Message, getMessages, sendMessage, markAllAsRead } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { getSupabase } from '../../lib/supabase';
 
@@ -20,35 +20,60 @@ export function MessagesPage() {
     const [loading, setLoading] = useState(true);
     const [messagesLoading, setMessagesLoading] = useState(false);
     const [chatMessages, setChatMessages] = useState<Message[]>([]);
+    const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const location = useLocation();
     const isMentorView = location.pathname.includes('mentor');
 
-    // 1. Initial Contact Load
-    useEffect(() => {
-        async function loadContacts() {
-            if (!user) return;
-            setLoading(true);
-            const role = isMentorView ? 'mentor' : 'student';
-            const data = await getContacts(user.id, role);
-            setContacts(data);
+    // 1. Initial Contact Load & Unread Counts
+    const loadContactsAndUnread = async () => {
+        if (!user) return;
+        setLoading(true);
+        const role = isMentorView ? 'mentor' : 'student';
+        const data = await getContacts(user.id, role);
+        setContacts(data);
 
-            if (data.length > 0 && !activeContactId) {
-                setActiveContactId(data[0].id);
+        // Fetch unread counts for all potential contacts
+        const supabase = getSupabase();
+        if (supabase) {
+            const { data: unreadData } = await supabase
+                .from('messages')
+                .select('sender_id')
+                .eq('receiver_id', user.id)
+                .eq('is_read', false);
+
+            if (unreadData) {
+                const counts: Record<string, number> = {};
+                unreadData.forEach(msg => {
+                    counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1;
+                });
+                setUnreadCounts(counts);
             }
-            setLoading(false);
         }
-        loadContacts();
+
+        if (data.length > 0 && !activeContactId) {
+            setActiveContactId(data[0].id);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        loadContactsAndUnread();
     }, [user, isMentorView]);
 
-    // 2. Load Chat History when contact changes
+    // 2. Load Chat History & Mark as Read
     useEffect(() => {
         async function loadChatHistory() {
             if (!user || !activeContactId) return;
             setMessagesLoading(true);
             const history = await getMessages(user.id, activeContactId);
             setChatMessages(history);
+
+            // Mark all as read when opening conversation
+            await markAllAsRead(activeContactId, user.id);
+            setUnreadCounts(prev => ({ ...prev, [activeContactId]: 0 }));
+
             setMessagesLoading(false);
         }
         loadChatHistory();
@@ -71,13 +96,20 @@ export function MessagesPage() {
                     table: 'messages',
                     filter: `receiver_id=eq.${user.id}`
                 },
-                (payload) => {
+                async (payload) => {
                     const newMessage = payload.new as Message;
-                    // Only add if it's from the active contact
+
                     if (newMessage.sender_id === activeContactId) {
+                        // In active chat: add to list and mark as read immediately
                         setChatMessages(prev => [...prev, newMessage]);
+                        await markAllAsRead(activeContactId, user.id);
                     } else {
-                        // Notify user about message from someone else
+                        // Not in active chat: increment unread count
+                        setUnreadCounts(prev => ({
+                            ...prev,
+                            [newMessage.sender_id]: (prev[newMessage.sender_id] || 0) + 1
+                        }));
+
                         const sender = contacts.find(c => c.id === newMessage.sender_id);
                         toast.info(`New message from ${sender?.name || 'someone'}`);
                     }
@@ -139,7 +171,7 @@ export function MessagesPage() {
 
                     <div className="flex-1 overflow-y-auto px-3 space-y-1">
                         <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                            Contacts
+                            {isMentorView ? 'Mentor Peers' : 'Student Peers'}
                         </div>
 
                         {loading ? (
@@ -151,7 +183,7 @@ export function MessagesPage() {
                                 <button
                                     key={contact.id}
                                     onClick={() => setActiveContactId(contact.id)}
-                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all group ${activeContactId === contact.id ? 'bg-white shadow-sm ring-1 ring-gray-100' : 'hover:bg-white/50'
+                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all group relative ${activeContactId === contact.id ? 'bg-white shadow-sm ring-1 ring-gray-100' : 'hover:bg-white/50'
                                         }`}
                                 >
                                     <div className="relative">
@@ -167,16 +199,19 @@ export function MessagesPage() {
                                     <div className="flex-1 text-left min-w-0">
                                         <div className="flex items-center justify-between">
                                             <span className="font-bold text-sm text-gray-900 truncate">{contact.name}</span>
-                                            <span className="text-[10px] text-gray-400 font-bold uppercase">{contact.role}</span>
+                                            {/* Unread Indicator */}
+                                            {unreadCounts[contact.id] > 0 && (
+                                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200" />
+                                            )}
                                         </div>
-                                        <p className="text-[11px] text-gray-500 truncate">{contact.lastMessage || 'Click to chat'}</p>
+                                        <p className="text-[11px] text-gray-500 truncate">{unreadCounts[contact.id] > 0 ? `${unreadCounts[contact.id]} new messages` : (contact.lastMessage || 'Click to chat')}</p>
                                     </div>
                                 </button>
                             ))
                         ) : (
                             <div className="p-8 text-center text-gray-400 text-xs">
-                                No contacts found.<br />
-                                Start by exploring mentors or tracks!
+                                No peer contacts found.<br />
+                                Add {isMentorView ? 'mentors' : 'students'} to your network!
                             </div>
                         )}
                     </div>
@@ -208,7 +243,7 @@ export function MessagesPage() {
                             </div>
 
                             {/* Chat Messages */}
-                            <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 bg-white scroll-smooth">
+                            <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 bg-white scroll-smooth focus:outline-none">
                                 {messagesLoading ? (
                                     <div className="flex flex-col items-center justify-center h-full space-y-3">
                                         <Loader2 className="w-8 h-8 text-indigo-200 animate-spin" />
@@ -216,7 +251,7 @@ export function MessagesPage() {
                                     </div>
                                 ) : chatMessages.length > 0 ? (
                                     chatMessages.map((message) => (
-                                        <div key={message.id} className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
+                                        <div key={message.id} id={`msg-${message.id}`} className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`max-w-[70%] ${message.sender_id === user?.id ? 'order-2' : ''}`}>
                                                 <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed ${message.sender_id === user?.id
                                                     ? 'bg-gray-900 text-white rounded-tr-none shadow-lg shadow-gray-200'
@@ -226,7 +261,16 @@ export function MessagesPage() {
                                                 </div>
                                                 <span className={`text-[10px] font-bold text-gray-400 mt-2 flex items-center gap-1 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
                                                     {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    {message.sender_id === user?.id && message.is_read && <Circle className="w-1 h-1 fill-indigo-500 text-indigo-500" />}
+                                                    {message.sender_id === user?.id && (
+                                                        message.is_read ? (
+                                                            <div className="flex items-center -space-x-1">
+                                                                <Circle className="w-1.5 h-1.5 fill-indigo-500 text-indigo-500" />
+                                                                <Circle className="w-1.5 h-1.5 fill-indigo-500 text-indigo-500" />
+                                                            </div>
+                                                        ) : (
+                                                            <Circle className="w-1.5 h-1.5 text-gray-300" />
+                                                        )
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>
@@ -273,7 +317,7 @@ export function MessagesPage() {
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">Your Conversations</h3>
                             <p className="text-gray-500 max-w-sm mb-8 font-medium">
-                                Select a contact from the sidebar to start a conversation with a mentor or peer.
+                                Select a contact from the sidebar to start a conversation with a peer.
                             </p>
                         </div>
                     )}
@@ -284,5 +328,4 @@ export function MessagesPage() {
     );
 }
 
-// Helper icons
-import { MessageSquare } from 'lucide-react';
+export default MessagesPage;

@@ -666,10 +666,51 @@ export const sendMessage = async (senderId: string, receiverId: string, content:
     }
 };
 
+export const markMessageAsRead = async (messageId: string): Promise<boolean> => {
+    try {
+        const supabase = getSupabase();
+        if (!supabase) return false;
+
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('id', messageId);
+
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Error marking message as read:", e);
+        return false;
+    }
+};
+
+export const markAllAsRead = async (senderId: string, receiverId: string): Promise<boolean> => {
+    try {
+        const supabase = getSupabase();
+        if (!supabase) return false;
+
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('sender_id', senderId)
+            .eq('receiver_id', receiverId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Error marking all as read:", e);
+        return false;
+    }
+};
+
 export const getContacts = async (userId: string, role: string): Promise<Contact[]> => {
     try {
         const supabase = getSupabase();
         if (!supabase) return [];
+
+        // USER REQUEST: Students should ONLY see peers (students), Mentors ONLY see peers (mentors).
+        // Remove Mentor-Student logic from messages contacts as requested.
 
         // 1. Get Peer Contacts (Same Role)
         const { data: peers, error: peerError } = await supabase
@@ -678,63 +719,24 @@ export const getContacts = async (userId: string, role: string): Promise<Contact
             .eq('role', role)
             .neq('id', userId);
 
-        if (peerError) console.error("Error fetching peer contacts:", peerError);
-
-        // 2. Get Functional Contacts (Mentor-Student)
-        let functionalContacts: Contact[] = [];
-        if (role === 'student') {
-            // Student sees Mentors they have bookings with
-            const bookings = await getStudentBookings(userId);
-            const mentorMap = new Map<string, Contact>();
-            bookings.forEach(b => {
-                if (b.mentors?.user_id && !mentorMap.has(b.mentors.user_id)) {
-                    mentorMap.set(b.mentors.user_id, {
-                        id: b.mentors.user_id,
-                        name: b.mentors.name,
-                        role: 'mentor',
-                        avatar: b.mentors.image,
-                        status: Math.random() > 0.4 ? 'online' : 'offline',
-                        lastMessage: b.mentor_note || 'Session booked'
-                    });
-                }
-            });
-            functionalContacts = Array.from(mentorMap.values());
-        } else {
-            // Mentor sees Students who booked them
-            const bookings = await getMentorBookings(userId);
-            const studentMap = new Map<string, Contact>();
-            bookings.forEach(b => {
-                if (b.profiles && !studentMap.has(b.profiles.id)) {
-                    studentMap.set(b.profiles.id, {
-                        id: b.profiles.id,
-                        name: b.profiles.full_name,
-                        role: 'student',
-                        avatar: b.profiles.avatar_url,
-                        status: Math.random() > 0.5 ? 'online' : 'offline',
-                        lastMessage: 'Student booking'
-                    });
-                }
-            });
-            functionalContacts = Array.from(studentMap.values());
+        if (peerError) {
+            console.error("Error fetching peer contacts:", peerError);
+            return [];
         }
 
-        // 3. Map Peers to Contact format
+        // 2. Map Peers to Contact format
+        // In a real app, lastMessage and unread count would be joined from messages table
+        // For now, we fetch just the unread status per-contact locally in the component
         const peerContacts: Contact[] = (peers || []).map((p: any) => ({
             id: p.id,
             name: p.full_name || 'User',
             role: p.role,
             avatar: p.avatar_url,
-            status: Math.random() > 0.6 ? 'online' : 'offline',
-            lastMessage: 'New contact'
+            status: 'offline', // Default, real-time presence would go here
+            lastMessage: 'Strict peer contact'
         }));
 
-        // 4. Combine and Deduplicate (just in case)
-        const allContactsMap = new Map<string, Contact>();
-        [...functionalContacts, ...peerContacts].forEach(c => {
-            allContactsMap.set(c.id, c);
-        });
-
-        return Array.from(allContactsMap.values());
+        return peerContacts;
     } catch (e) {
         console.error("Error fetching contacts:", e);
         return [];
