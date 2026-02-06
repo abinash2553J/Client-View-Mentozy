@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getUserProfile, getMentorBookings, updateBookingStatus, acceptBooking, Profile, Booking } from '../../lib/api';
+import { getUserProfile, getMentorBookings, updateBookingStatus, acceptBooking, updateMentorStatus, Profile, Booking } from '../../lib/api';
 import { getSupabase } from '../../lib/supabase';
 import {
     Loader2, Calendar, Clock, User, CheckCircle2,
@@ -45,6 +45,9 @@ export function MentorDashboardPage() {
                 return;
             }
 
+            // Clear prior state
+            setProfile(null);
+
             try {
                 const supabase = getSupabase();
 
@@ -54,14 +57,22 @@ export function MentorDashboardPage() {
                     getMentorBookings(user.id)
                 ]);
 
-                setProfile(userProfile);
+                if (userProfile) {
+                    // Redirect if accessing wrong dashboard
+                    if (userProfile.role === 'student') {
+                        navigate('/student-dashboard');
+                        return;
+                    }
+                    setProfile(userProfile);
+                }
+
                 setBookings(userBookings);
 
                 // 2. Fetch Mentor Details (Rate)
                 if (supabase) {
                     const { data: mentorData } = await supabase
                         .from('mentors')
-                        .select('hourly_rate, company, bio')
+                        .select('hourly_rate, company, bio, status')
                         .eq('user_id', user.id)
                         .single();
                     setMentorDetails(mentorData);
@@ -308,9 +319,31 @@ export function MentorDashboardPage() {
                     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
                         <h3 className="font-bold text-gray-900 mb-3">Quick Actions</h3>
                         <div className="space-y-2">
-                            <button className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-sm font-medium text-gray-700 transition-colors">
-                                Update Availability
-                            </button>
+                            <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 text-sm font-medium text-gray-700">
+                                <span>Availability</span>
+                                <button
+                                    onClick={async () => {
+                                        if (!mentorDetails) return;
+                                        const newStatus = mentorDetails.status === 'unavailable' ? 'active' : 'unavailable';
+
+                                        // Optimistic Update
+                                        setMentorDetails({ ...mentorDetails, status: newStatus });
+
+                                        const success = await updateMentorStatus(user?.id || '', newStatus);
+                                        if (success) {
+                                            toast.success(`You are now ${newStatus === 'active' ? 'Online' : 'Offline'}`);
+                                        } else {
+                                            toast.error("Failed to update status");
+                                            setMentorDetails({ ...mentorDetails }); // Revert
+                                        }
+                                    }}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${mentorDetails?.status === 'unavailable' ? 'bg-gray-200' : 'bg-emerald-500'}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${mentorDetails?.status === 'unavailable' ? 'translate-x-1' : 'translate-x-6'}`}
+                                    />
+                                </button>
+                            </div>
                             <button className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-sm font-medium text-gray-700 transition-colors">
                                 Edit Profile
                             </button>

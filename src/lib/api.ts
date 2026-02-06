@@ -119,96 +119,7 @@ export interface Booking {
 }
 
 // Fallback Data - CALIBRATED: Prices $15-$75, Natural Ratings
-const FALLBACK_MENTORS: Mentor[] = [
-    {
-        id: 101,
-        name: "Dr. Aris Thorne",
-        role: "Head of AI Research",
-        company: "DeepMind",
-        expertise: ["Neural Networks", "Ethics in AI"],
-        rating: 5.0,
-        reviews: 342,
-        image: "bg-indigo-600/10 text-indigo-600",
-        initials: "AT",
-        bio: "Specializing in the intersection of cognitive science and machine learning. 15+ years of experience.",
-        years_experience: 15,
-        hourly_rate: 75
-    },
-    {
-        id: 102,
-        name: "Elena Rodriguez",
-        role: "Senior UX Architect",
-        company: "Adobe",
-        expertise: ["Design Systems", "User Psychology"],
-        rating: 4.5,
-        reviews: 215,
-        image: "bg-rose-500/10 text-rose-600",
-        initials: "ER",
-        bio: "Passionate about creating inclusive digital experiences. I help designers master design systems.",
-        years_experience: 9,
-        hourly_rate: 65
-    },
-    {
-        id: 103,
-        name: "Marcus Holloway",
-        role: "Security Consultant",
-        company: "CrowdStrike",
-        expertise: ["Cybersecurity", "Cloud Security"],
-        rating: 4.3,
-        reviews: 128,
-        image: "bg-slate-800/10 text-slate-800",
-        initials: "MH",
-        bio: "Helping startups and enterprises secure their infrastructure. Certified ethical hacker.",
-        years_experience: 12,
-        hourly_rate: 55
-    },
-    {
-        id: 104,
-        name: "Sienna Kim",
-        role: "Marketing Director",
-        company: "Spotify",
-        expertise: ["Growth Hacking", "Brand Strategy"],
-        rating: 4.1,
-        reviews: 560,
-        image: "bg-emerald-500/10 text-emerald-600",
-        initials: "SK",
-        bio: "Expert at scaling user bases through data-driven marketing strategies.",
-        years_experience: 10,
-        hourly_rate: 45
-    },
-    {
-        id: 105,
-        name: "Rohal Sharma",
-        role: "Senior Instructor",
-        company: "TechNexus",
-        expertise: ["Full Stack Web", "React"],
-        rating: 4.5,
-        reviews: 142,
-        image: "bg-amber-500/10 text-amber-600",
-        initials: "RS",
-        bio: "Dedicated instructor with a passion for teaching modern web technologies.",
-        years_experience: 7,
-        hourly_rate: 35
-    },
-    {
-        id: 106,
-        name: "TechNova Academy",
-        role: "Educational Partner",
-        company: "Global Ed",
-        expertise: ["Bootcamps", "Certifications"],
-        rating: 4.3,
-        reviews: 1200,
-        image: "bg-blue-600/10 text-blue-600",
-        initials: "TN",
-        type: "online",
-        website: "technova.academy",
-        address: "Digital Campus",
-        founder: "Dr. Sarah Chen",
-        status: "active",
-        bio: "Provider of high-impact technical training programs.",
-        hourly_rate: 25
-    }
-];
+
 
 const FALLBACK_TRACKS: Track[] = [
     {
@@ -240,7 +151,7 @@ const FALLBACK_TRACKS: Track[] = [
 export const getMentors = async (): Promise<Mentor[]> => {
     try {
         const supabase = getSupabase();
-        if (!supabase) return FALLBACK_MENTORS;
+        if (!supabase) return [];
 
         const { data, error } = await supabase
             .from('mentors')
@@ -251,12 +162,12 @@ export const getMentors = async (): Promise<Mentor[]> => {
             `);
 
         if (error) {
-            console.warn("Error fetching mentors from Supabase, using fallback:", error.message);
-            return FALLBACK_MENTORS;
+            console.warn("Error fetching mentors from Supabase:", error.message);
+            return [];
         }
 
         if (!data || data.length === 0) {
-            return FALLBACK_MENTORS;
+            return [];
         }
 
         const dbMentors = data as unknown as DBMentor[];
@@ -323,11 +234,10 @@ export const getMentors = async (): Promise<Mentor[]> => {
                 };
             });
 
-        // Mix with premium fallbacks
-        return [...mappedMentors, ...FALLBACK_MENTORS].slice(0, 12);
+        return mappedMentors;
     } catch (e) {
         console.error("Unexpected error fetching mentors:", e);
-        return FALLBACK_MENTORS;
+        return [];
     }
 };
 
@@ -453,20 +363,8 @@ export const getStudentEnrollments = async (userId: string): Promise<Enrollment[
             } as Enrollment;
         });
 
-        // If no real enrollments, return professional demo courses
-        if (realEnrollments.length === 0) {
-            return FALLBACK_TRACKS.slice(0, 2).map((track, idx) => ({
-                id: `demo-${idx}`,
-                user_id: userId,
-                track_id: track.id || 0,
-                status: 'active',
-                progress: idx === 0 ? 45 : 12,
-                enrolled_at: new Date().toISOString(),
-                tracks: track
-            })) as Enrollment[];
-        }
-
         return realEnrollments;
+
     } catch (e) {
         console.error("Unexpected error in getStudentEnrollments:", e);
         return [];
@@ -771,5 +669,24 @@ export const getContacts = async (userId: string, role: 'student' | 'mentor'): P
     } catch (e) {
         console.error("Error fetching contacts:", e);
         return [];
+    }
+};
+
+// Update Mentor Status
+export const updateMentorStatus = async (userId: string, status: 'active' | 'unavailable'): Promise<boolean> => {
+    try {
+        const supabase = getSupabase();
+        if (!supabase) return false;
+
+        const { error } = await supabase
+            .from('mentors')
+            .update({ status })
+            .eq('user_id', userId);
+
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Error updating mentor status:", e);
+        return false;
     }
 };
