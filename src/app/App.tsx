@@ -22,6 +22,8 @@ const MentorOnboardingPage = lazy(() => import('./pages/MentorOnboardingPage').t
 const MentorDashboardPage = lazy(() => import('./pages/MentorDashboardPage').then(module => ({ default: module.MentorDashboardPage })));
 const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage').then(module => ({ default: module.StudentDashboardPage })));
 const DashboardMentorsPage = lazy(() => import('./pages/DashboardMentorsPage').then(module => ({ default: module.DashboardMentorsPage })));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then(module => ({ default: module.AuthCallbackPage })));
+
 
 // New Pages
 const TeacherTypeSelectionPage = lazy(() => import('./pages/TeacherTypeSelectionPage').then(module => ({ default: module.TeacherTypeSelectionPage })));
@@ -55,6 +57,7 @@ const MentorAnalyticsPage = lazy(() => import('./pages/MentorAnalyticsPage').the
 const MentorAchievementsPage = lazy(() => import('./pages/MentorAchievementsPage').then(module => ({ default: module.MentorAchievementsPage })));
 const MentorProfilePage = lazy(() => import('./pages/MentorProfilePage').then(module => ({ default: module.MentorProfilePage })));
 const MentorCalendarPage = lazy(() => import('./pages/MentorCalendarPage').then(module => ({ default: module.MentorCalendarPage })));
+const CreateCoursePage = lazy(() => import('./pages/CreateCoursePage').then(module => ({ default: module.CreateCoursePage })));
 
 // Layout Component
 const Layout = () => {
@@ -104,6 +107,11 @@ function App() {
         </Route>
 
         {/* Auth Pages without Layout (or custom layout manually) */}
+        <Route path="/auth/callback" element={
+          <Suspense fallback={<PageLoader />}>
+            <AuthCallbackPage />
+          </Suspense>
+        } />
         <Route path="/login" element={
           <Suspense fallback={<PageLoader />}>
             <LoginPage />
@@ -226,6 +234,11 @@ function App() {
         <Route path="/certifications" element={
           <Suspense fallback={<PageLoader />}>
             <CertificationsPage />
+          </Suspense>
+        } />
+        <Route path="/mentor-create-course" element={
+          <Suspense fallback={<PageLoader />}>
+            <CreateCoursePage />
           </Suspense>
         } />
 

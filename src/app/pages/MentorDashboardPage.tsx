@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
 import { AcceptSessionModal } from '../components/booking/AcceptSessionModal';
+import { StudentProfileModal } from '../components/mentor/StudentProfileModal';
 
 export function MentorDashboardPage() {
     const { user } = useAuth();
@@ -26,6 +27,8 @@ export function MentorDashboardPage() {
     // Modal State
     const [acceptModalOpen, setAcceptModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [viewProfileModalOpen, setViewProfileModalOpen] = useState(false);
+    const [viewProfileData, setViewProfileData] = useState<Profile | null>(null);
 
     // Derived State
     const pendingBookings = bookings.filter(b => b.status === 'pending');
@@ -228,7 +231,13 @@ export function MentorDashboardPage() {
                                     <div key={booking.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex gap-4">
-                                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                <div
+                                                    className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all"
+                                                    onClick={() => {
+                                                        setViewProfileData(booking.profiles || null);
+                                                        setViewProfileModalOpen(true);
+                                                    }}
+                                                >
                                                     {booking.profiles?.avatar_url ? (
                                                         <img src={booking.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
                                                     ) : (
@@ -236,7 +245,26 @@ export function MentorDashboardPage() {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-gray-900">{booking.profiles?.full_name || 'Unknown Student'}</h4>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4
+                                                            className="font-bold text-gray-900 hover:text-indigo-600 cursor-pointer"
+                                                            onClick={() => {
+                                                                setViewProfileData(booking.profiles || null);
+                                                                setViewProfileModalOpen(true);
+                                                            }}
+                                                        >
+                                                            {booking.profiles?.full_name || 'Unknown Student'}
+                                                        </h4>
+                                                        <button
+                                                            onClick={() => {
+                                                                setViewProfileData(booking.profiles || null);
+                                                                setViewProfileModalOpen(true);
+                                                            }}
+                                                            className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-md font-bold text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                                        >
+                                                            View Profile
+                                                        </button>
+                                                    </div>
                                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
                                                         <span className="flex items-center gap-1.5">
                                                             <Calendar className="w-3.5 h-3.5" />
@@ -291,7 +319,26 @@ export function MentorDashboardPage() {
                                                     <span className="text-lg leading-none">{new Date(booking.scheduled_at).getDate()}</span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-gray-900 text-sm">{booking.profiles?.full_name}</h4>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4
+                                                            className="font-bold text-gray-900 text-sm hover:text-indigo-600 cursor-pointer"
+                                                            onClick={() => {
+                                                                setViewProfileData(booking.profiles || null);
+                                                                setViewProfileModalOpen(true);
+                                                            }}
+                                                        >
+                                                            {booking.profiles?.full_name}
+                                                        </h4>
+                                                        <button
+                                                            onClick={() => {
+                                                                setViewProfileData(booking.profiles || null);
+                                                                setViewProfileModalOpen(true);
+                                                            }}
+                                                            className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-md font-bold text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                                        >
+                                                            View
+                                                        </button>
+                                                    </div>
                                                     <div className="flex items-center gap-2 mt-0.5 text-xs font-medium text-gray-500">
                                                         <Clock className="w-3 h-3" />
                                                         {new Date(booking.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -360,6 +407,12 @@ export function MentorDashboardPage() {
                 onClose={() => setAcceptModalOpen(false)}
                 studentName={selectedBooking?.profiles?.full_name || 'Student'}
                 onConfirm={handleConfirmAccept}
+            />
+
+            <StudentProfileModal
+                isOpen={viewProfileModalOpen}
+                onClose={() => setViewProfileModalOpen(false)}
+                profile={viewProfileData}
             />
         </DashboardLayout >
     );

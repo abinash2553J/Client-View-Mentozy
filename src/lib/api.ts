@@ -23,6 +23,7 @@ interface DBMentor {
     rating: number;
     total_reviews: number;
     created_at: string;
+    status?: string | null;
     // Joins
     profiles?: DBProfile;
     mentor_expertise?: { skill: string }[];
@@ -172,67 +173,50 @@ export const getMentors = async (): Promise<Mentor[]> => {
 
         const dbMentors = data as unknown as DBMentor[];
 
-        const mappedMentors: Mentor[] = dbMentors
-            .filter((item) => {
-                const name = (item.profiles?.full_name || '').toLowerCase();
-                const bio = (item.bio || '').toLowerCase();
-                const company = (item.company || '').toLowerCase();
+        const mappedMentors: Mentor[] = dbMentors.map((item) => {
+            let bioData: any = null;
+            let bioText = item.bio || '';
 
-                // CALIBRATED FILTERING: Remove dwdsdaw and mentozy as requested
-                const isTestOrBanned =
-                    name.includes('dasd') || name.includes('ghgh') || name.includes('wdas') ||
-                    name.includes('test') || name.includes('dwds') || name.includes('mentozy') ||
-                    bio.includes('dasd') || bio.includes('ghgh') || bio.includes('dwds') ||
-                    company.includes('dasd') || company.includes('mentozy');
+            if (bioText.startsWith('{')) {
+                try {
+                    bioData = JSON.parse(bioText);
+                } catch (e) { }
+            }
 
-                const isTooShort = name.trim().length < 3;
+            const name = item.profiles?.full_name || 'Expert Mentor';
+            const role = bioData ? (bioData.role || 'Partner') : (item.bio ? item.bio.split('.')[0] : 'Instructor');
 
-                return !isTestOrBanned && !isTooShort;
-            })
-            .map((item) => {
-                let bioData: any = null;
-                let bioText = item.bio || '';
+            // PRICE CALIBRATION: Clamping between 15 and 75
+            let rate = item.hourly_rate || 20;
+            if (rate < 15) rate = 15;
+            if (rate > 75) rate = 75;
 
-                if (bioText.startsWith('{')) {
-                    try {
-                        bioData = JSON.parse(bioText);
-                    } catch (e) { }
-                }
+            // RATING CALIBRATION: Normalizing to 4.1 - 5.0 range
+            let rating = item.rating || 4.5;
+            if (rating < 4.1) rating = 4.1 + (Math.random() * 0.4);
+            if (rating > 5.0) rating = 5.0;
 
-                const name = item.profiles?.full_name || 'Expert Mentor';
-                const role = bioData ? (bioData.role || 'Partner') : (item.bio ? item.bio.split('.')[0] : 'Instructor');
-
-                // PRICE CALIBRATION: Clamping between 15 and 75
-                let rate = item.hourly_rate || 20;
-                if (rate < 15) rate = 15;
-                if (rate > 75) rate = 75;
-
-                // RATING CALIBRATION: Normalizing to 4.1 - 5.0 range
-                let rating = item.rating || 4.5;
-                if (rating < 4.1) rating = 4.1 + (Math.random() * 0.4);
-                if (rating > 5.0) rating = 5.0;
-
-                return {
-                    id: item.id,
-                    name: name,
-                    role: role,
-                    company: item.company || 'Global Expert',
-                    expertise: item.mentor_expertise?.map((e) => e.skill) || ["Technology"],
-                    rating: parseFloat(rating.toFixed(1)),
-                    reviews: item.total_reviews || Math.floor(Math.random() * 50) + 10,
-                    image: item.profiles?.avatar_url || 'bg-amber-500/10 text-amber-600',
-                    initials: name.split(' ').map((n: string) => n[0]).join('').substring(0, 2),
-                    bio: bioData ? undefined : item.bio || undefined,
-                    years_experience: item.years_experience || 5,
-                    hourly_rate: rate,
-                    type: bioData?.type,
-                    website: bioData?.website,
-                    address: bioData?.address,
-                    founder: bioData?.founder,
-                    status: bioData?.status,
-                    domain: bioData?.domain
-                };
-            });
+            return {
+                id: item.id,
+                name: name,
+                role: role,
+                company: item.company || 'Global Expert',
+                expertise: item.mentor_expertise?.map((e) => e.skill) || ["Technology"],
+                rating: parseFloat(rating.toFixed(1)),
+                reviews: item.total_reviews || Math.floor(Math.random() * 50) + 10,
+                image: item.profiles?.avatar_url || 'bg-amber-500/10 text-amber-600',
+                initials: name.split(' ').map((n: string) => n[0]).join('').substring(0, 2),
+                bio: bioData ? undefined : item.bio || undefined,
+                years_experience: item.years_experience || 5,
+                hourly_rate: rate,
+                type: bioData?.type,
+                website: bioData?.website,
+                address: bioData?.address,
+                founder: bioData?.founder,
+                status: item.status || bioData?.status, // Prioritize DB column
+                domain: bioData?.domain
+            };
+        });
 
         return mappedMentors;
     } catch (e) {

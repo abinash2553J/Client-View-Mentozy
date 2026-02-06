@@ -6,11 +6,13 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookingModal } from '../booking/BookingModal';
+import { MentorProfileModal } from './MentorProfileModal';
 
 export function MentorGallery() {
     const [mentors, setMentors] = useState<Mentor[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
+    const [profileModalOpen, setProfileModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -194,7 +196,19 @@ export function MentorGallery() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-10 flex gap-3">
+                                    <div className="mt-8 flex gap-3">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedMentor(mentor);
+                                                setProfileModalOpen(true);
+                                            }}
+                                            className="flex-1 py-4 bg-white border-2 border-gray-100 text-gray-700 text-sm font-bold rounded-2xl hover:border-gray-900 hover:text-gray-900 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <User className="w-4 h-4" /> View Profile
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-3 flex gap-3">
                                         <button
                                             onClick={() => handleBookClick(mentor)}
                                             disabled={mentor.status === 'unavailable'}
@@ -228,11 +242,29 @@ export function MentorGallery() {
             )}
 
             <BookingModal
-                isOpen={!!selectedMentor}
+                isOpen={!!selectedMentor && !profileModalOpen} // Ensure only one modal active if overlapping, though better to separate state
                 onClose={() => setSelectedMentor(null)}
                 mentorName={selectedMentor?.name || ''}
                 userPlan="Free"
                 onConfirm={handleConfirmBooking}
+            />
+
+            <MentorProfileModal
+                isOpen={profileModalOpen}
+                onClose={() => {
+                    setProfileModalOpen(false);
+                    // Don't clear selectedMentor here if we want to preseve it for booking transition? 
+                    // Actually usually 'selectedMentor' is shared.
+                    // If we close profile, we just close.
+                    if (!selectedMentor) setSelectedMentor(null);
+                }}
+                mentor={selectedMentor}
+                onBook={(m) => {
+                    setProfileModalOpen(false);
+                    // selectedMentor is already set. 
+                    // Just triggering booking flow.
+                    handleBookClick(m);
+                }}
             />
         </div>
     );
