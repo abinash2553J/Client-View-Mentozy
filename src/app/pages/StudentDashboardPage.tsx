@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     BookOpen, ChevronRight,
     Search,
-    Zap, Activity, Award, Cpu, Heart
+    Activity, Award
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
@@ -125,25 +125,7 @@ export function StudentDashboardPage() {
                     <p className="text-sm text-gray-500 font-medium">Lessons completed</p>
                 </div>
 
-                {/* Plan & Minutes Widget */}
-                <div className="bg-gradient-to-br from-indigo-50 to-white p-5 rounded-2xl border border-indigo-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-bold text-indigo-900">Premium</h3>
-                            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase rounded-full">Plan</span>
-                        </div>
-                        <div className="flex items-end gap-1 mb-1">
-                            <h3 className="text-3xl font-bold text-indigo-600">30</h3>
-                            <span className="text-sm text-gray-400 font-bold mb-1">/ 100m</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: '30%' }}></div>
-                        </div>
-                        <p className="text-[10px] text-gray-400 mt-2 font-medium">Live minutes used</p>
-                    </div>
-                    {/* Background decoration */}
-                    <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-indigo-100 rounded-full blur-xl group-hover:bg-indigo-200 transition-colors"></div>
-                </div>
+                {/* Plan & Minutes Widget - REMOVED (Mock Data) */}
             </div>
 
             {/* Main Content Grid */}
@@ -205,37 +187,7 @@ export function StudentDashboardPage() {
                             )}
                         </div>
 
-                        {/* Recommended For You Section */}
-                        <div className="mt-12">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-900">Recommended for you</h2>
-                                <Link to="/tracks" className="text-amber-600 font-bold text-sm hover:underline flex items-center gap-1">
-                                    View Library <ChevronRight className="w-4 h-4" />
-                                </Link>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-5">
-                                <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 relative overflow-hidden group shadow-lg">
-                                    <div className="relative z-10">
-                                        <div className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold text-white uppercase tracking-widest border border-white/20 inline-block mb-4">Popular</div>
-                                        <h3 className="text-2xl font-bold text-white mb-2">Mastering AI & Data Science</h3>
-                                        <p className="text-indigo-100 text-sm mb-6 max-w-[200px]">Unlock the power of intelligence with our most taken track.</p>
-                                        <Link to="/tracks" className="inline-flex items-center justify-center px-6 py-2.5 bg-white text-indigo-700 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-colors">Explorer Now</Link>
-                                    </div>
-                                    <Cpu className="absolute -bottom-6 -right-6 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-500" />
-                                </div>
-
-                                <div className="bg-gradient-to-br from-rose-500 to-orange-600 rounded-3xl p-8 relative overflow-hidden group shadow-lg">
-                                    <div className="relative z-10">
-                                        <div className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold text-white uppercase tracking-widest border border-white/20 inline-block mb-4">Trending</div>
-                                        <h3 className="text-2xl font-bold text-white mb-2">UX & Branding Mastery</h3>
-                                        <p className="text-rose-100 text-sm mb-6 max-w-[200px]">Learn to design products that customers actually love.</p>
-                                        <Link to="/tracks" className="inline-flex items-center justify-center px-6 py-2.5 bg-white text-rose-600 rounded-xl font-bold text-sm hover:bg-rose-50 transition-colors">Explorer Now</Link>
-                                    </div>
-                                    <Heart className="absolute -bottom-6 -right-6 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-500" />
-                                </div>
-                            </div>
-                        </div>
+                        {/* Recommended For You Section - REMOVED (Mock Data) */}
                     </div>
                 </div>
 
