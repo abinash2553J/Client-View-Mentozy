@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     BookOpen, ChevronRight, Clock,
     Search,
-    Zap, Activity, Award, Cpu, Heart
+    Activity, Award
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
@@ -135,25 +135,7 @@ export function StudentDashboardPage() {
                     <p className="text-sm text-gray-500 font-medium">Lessons completed</p>
                 </div>
 
-                {/* Plan & Minutes Widget */}
-                <div className="bg-gradient-to-br from-indigo-50 to-white p-5 rounded-2xl border border-indigo-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-bold text-indigo-900">Premium</h3>
-                            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase rounded-full">Plan</span>
-                        </div>
-                        <div className="flex items-end gap-1 mb-1">
-                            <h3 className="text-3xl font-bold text-indigo-600">30</h3>
-                            <span className="text-sm text-gray-400 font-bold mb-1">/ 100m</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: '30%' }}></div>
-                        </div>
-                        <p className="text-[10px] text-gray-400 mt-2 font-medium">Live minutes used</p>
-                    </div>
-                    {/* Background decoration */}
-                    <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-indigo-100 rounded-full blur-xl group-hover:bg-indigo-200 transition-colors"></div>
-                </div>
+                {/* Plan & Minutes Widget - REMOVED (Mock Data) */}
             </div>
 
             {/* Main Content Grid */}
@@ -215,6 +197,9 @@ export function StudentDashboardPage() {
                             )}
                         </div>
 
+<<<<<<< HEAD
+                        {/* Recommended For You Section - REMOVED (Mock Data) */}
+=======
                         {/* Recommended For You Section */}
                         <div className="mt-12">
                             <div className="flex items-center justify-between mb-6">
@@ -246,6 +231,7 @@ export function StudentDashboardPage() {
                                 </div>
                             </div>
                         </div>
+>>>>>>> b3000648d637cdca39b9e5ba8346806841f0b286
                     </div>
                 </div>
 
