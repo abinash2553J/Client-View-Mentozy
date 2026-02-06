@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
+import { AcceptBookingModal } from '../components/mentor/AcceptBookingModal';
 
 export function MentorDashboardPage() {
     const { user } = useAuth();
@@ -21,6 +22,10 @@ export function MentorDashboardPage() {
     const [mentorDetails, setMentorDetails] = useState<any>(null); // { hourly_rate, company }
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
+
+    // Modal State
+    const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState<{ id: string; studentName: string } | null>(null);
 
     // Derived State
     const pendingBookings = bookings.filter(b => b.status === 'pending');
@@ -73,11 +78,21 @@ export function MentorDashboardPage() {
     }, [user, navigate]);
 
     const handleBookingAction = async (bookingId: string, action: 'confirmed' | 'cancelled') => {
+        if (action === 'confirmed') {
+            const booking = bookings.find(b => b.id === bookingId);
+            setSelectedBooking({
+                id: bookingId,
+                studentName: booking?.profiles?.full_name || 'Student'
+            });
+            setIsAcceptModalOpen(true);
+            return;
+        }
+
         setProcessingId(bookingId);
         try {
             const success = await updateBookingStatus(bookingId, action);
             if (success) {
-                toast.success(action === 'confirmed' ? 'Session Accepted' : 'Session Declined');
+                toast.success('Session Declined');
                 // Optimistic Update
                 setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: action } : b));
             } else {
@@ -87,6 +102,14 @@ export function MentorDashboardPage() {
             toast.error("Action failed. Please try again.");
         } finally {
             setProcessingId(null);
+        }
+    };
+
+    const handleAcceptSuccess = () => {
+        if (selectedBooking) {
+            setBookings(prev => prev.map(b => b.id === selectedBooking.id ? { ...b, status: 'confirmed' } : b));
+            // Trigger a re-fetch of data to get full booking objects if needed
+            // But for now optimistic update is fine
         }
     };
 
@@ -292,6 +315,16 @@ export function MentorDashboardPage() {
                 </div>
 
             </div>
+
+            {selectedBooking && (
+                <AcceptBookingModal
+                    isOpen={isAcceptModalOpen}
+                    onClose={() => setIsAcceptModalOpen(false)}
+                    bookingId={selectedBooking.id}
+                    studentName={selectedBooking.studentName}
+                    onSuccess={handleAcceptSuccess}
+                />
+            )}
         </DashboardLayout>
     );
 }
