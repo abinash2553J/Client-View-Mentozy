@@ -132,32 +132,7 @@ export interface Message {
 // Fallback Data - CALIBRATED: Prices $15-$75, Natural Ratings
 
 
-const FALLBACK_TRACKS: Track[] = [
-    {
-        title: "Full Stack Web Development",
-        level: "Beginner to Advanced",
-        duration: "6 Months",
-        projects: 8,
-        description: "Master the MERN stack (MongoDB, Express, React, Node.js) and build production-ready applications.",
-        modules: ["HTML/CSS & JavaScript", "React & State Management", "Node.js & APIs", "Database Design", "Deployment & DevOps"]
-    },
-    {
-        title: "Data Structures & Algorithms",
-        level: "Intermediate",
-        duration: "3 Months",
-        projects: 40,
-        description: "Crack coding interviews at top tech companies. Focus on problem-solving patterns and optimization.",
-        modules: ["Arrays & Strings", "Trees & Graphs", "Dynamic Programming", "System Design Basics", "Mock Interviews"]
-    },
-    {
-        title: "Product Management",
-        level: "Beginner",
-        duration: "4 Months",
-        projects: 5,
-        description: "Learn how to build products users love. From user research to roadmap planning and launch.",
-        modules: ["Market Research", "User Personas", "Wireframing", "Agile Methodologies", "Go-to-Market Strategy"]
-    }
-];
+const FALLBACK_TRACKS: Track[] = [];
 
 export const getMentors = async (): Promise<Mentor[]> => {
     try {
@@ -250,12 +225,12 @@ export const getTracks = async (): Promise<Track[]> => {
             .order('module_order', { foreignTable: 'track_modules', ascending: true });
 
         if (error) {
-            console.warn("Error fetching tracks from Supabase, using fallback:", error.message);
-            return FALLBACK_TRACKS;
+            console.warn("Error fetching tracks from Supabase:", error.message);
+            return [];
         }
 
         if (!data || data.length === 0) {
-            return FALLBACK_TRACKS;
+            return [];
         }
 
         const dbTracks = data as unknown as DBTrack[];
@@ -274,7 +249,7 @@ export const getTracks = async (): Promise<Track[]> => {
         return mappedTracks;
     } catch (e) {
         console.error("Unexpected error fetching tracks:", e);
-        return FALLBACK_TRACKS;
+        return [];
     }
 };
 
