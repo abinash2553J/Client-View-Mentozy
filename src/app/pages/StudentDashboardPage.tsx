@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     BookOpen, ChevronRight, Clock,
     Search,
-    Activity, Award
+    Activity, Award, Zap
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
@@ -46,12 +46,16 @@ export function StudentDashboardPage() {
     }, [user]);
 
     // Derived Statistics
-    const completedCourses = enrollments.filter(e => e.status === 'completed');
+    // Derived Statistics
+    console.log("Dashboard Render: ", { profile, enrollments, bookings, loading });
+
+    const safeEnrollments = Array.isArray(enrollments) ? enrollments : [];
+    const completedCourses = safeEnrollments.filter(e => e.status === 'completed');
     const completedCount = completedCourses.length;
 
     // Estimate hours: 10 hours per course * (progress / 100)
-    const totalHours = Math.round(enrollments.reduce((acc, curr) => acc + (10 * (curr.progress / 100)), 0));
-    const lessonsCompleted = Math.round(enrollments.reduce((acc, curr) => acc + (12 * (curr.progress / 100)), 0)); // Approx 12 lessons per course
+    const totalHours = Math.round(safeEnrollments.reduce((acc, curr) => acc + (10 * (curr.progress / 100)), 0));
+    const lessonsCompleted = Math.round(safeEnrollments.reduce((acc, curr) => acc + (12 * (curr.progress / 100)), 0)); // Approx 12 lessons per course
 
     // Key Stats
     const streak = profile?.streak || 0;
@@ -59,10 +63,17 @@ export function StudentDashboardPage() {
     const firstName = profile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
 
     // Sort Bookings by date
-    const featureBookings = [...bookings].sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+    const safeBookings = Array.isArray(bookings) ? bookings : [];
+    const featureBookings = [...safeBookings].sort((a, b) => {
+        const dateA = new Date(a.scheduled_at).getTime();
+        const dateB = new Date(b.scheduled_at).getTime();
+        return (isNaN(dateA) ? 0 : dateA) - (isNaN(dateB) ? 0 : dateB);
+    });
 
     // Calendar Modifiers (Highlight booked dates)
-    const bookedDates = featureBookings.map(b => new Date(b.scheduled_at));
+    const bookedDates = featureBookings
+        .map(b => new Date(b.scheduled_at))
+        .filter(d => !isNaN(d.getTime()));
 
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -156,8 +167,8 @@ export function StudentDashboardPage() {
                         <div className="grid md:grid-cols-2 gap-5 mb-10">
                             {loading ? (
                                 [1, 2].map(i => <div key={i} className="h-48 bg-gray-100 rounded-3xl animate-pulse" />)
-                            ) : enrollments.length > 0 ? (
-                                enrollments.slice(0, 2).map(enrollment => (
+                            ) : safeEnrollments.length > 0 ? (
+                                safeEnrollments.slice(0, 2).map(enrollment => (
                                     <div key={enrollment.id} className="group relative overflow-hidden rounded-3xl bg-white border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300">
                                         <div className="absolute top-0 left-0 w-full h-1.5 bg-indigo-500"></div>
 
