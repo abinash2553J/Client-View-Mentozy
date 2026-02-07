@@ -67,18 +67,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             )}
 
             {/* Sidebar Container */}
+            {/* Sidebar Container */}
             <aside className={`
-                fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out
+                fixed top-0 left-0 z-50 h-screen w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 <div className="h-full flex flex-col">
                     {/* Header */}
-                    <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
-                        <Link to="/" className="flex items-center gap-2 font-bold text-xl text-gray-900">
+                    <div className="h-16 flex items-center justify-between px-6 border-b border-sidebar-border">
+                        <Link to="/" className="flex items-center gap-2 font-bold text-xl text-sidebar-foreground">
                             Mentozy
-                            <div className="w-1.5 h-1.5 bg-amber-500 rounded-sm"></div>
+                            <div className="w-1.5 h-1.5 bg-primary rounded-sm"></div>
                         </Link>
-                        <button onClick={onClose} className="md:hidden p-1 text-gray-500 hover:bg-gray-100 rounded-lg">
+                        <button onClick={onClose} className="md:hidden p-1 text-sidebar-foreground/50 hover:bg-sidebar-accent/50 rounded-lg">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -93,21 +94,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 className={`
                                     flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all
                                     ${isActive(item.path)
-                                        ? 'bg-amber-50 text-amber-900'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'}
                                 `}
                             >
-                                <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-amber-500' : 'text-gray-400'}`} />
+                                <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-sidebar-primary' : 'text-sidebar-foreground/50'}`} />
                                 {item.label}
                             </Link>
                         ))}
                     </nav>
 
                     {/* Footer / Sign Out */}
-                    <div className="p-4 border-t border-gray-100">
+                    <div className="p-4 border-t border-sidebar-border">
                         <button
                             onClick={() => signOut()}
-                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 w-full transition-colors"
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-xl w-full transition-colors"
                         >
                             <LogOut className="w-5 h-5" />
                             Sign Out
