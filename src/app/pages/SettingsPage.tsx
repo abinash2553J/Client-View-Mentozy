@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-    Moon, Sun, Key, Mail,
-    MessageCircle, LogOut, Trash2,
-    ChevronRight, Shield, FileText,
-    HelpCircle, ExternalLink, Globe,
-    Bell, Lock, User, Briefcase, DollarSign
-} from 'lucide-react';
+import { ChevronRight, Bell, Lock, User, Briefcase, DollarSign, Shield, Key, HelpCircle, Mail, LogOut, Trash2, MessageCircle, FileText, ExternalLink, Globe, Sun } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
@@ -32,17 +26,11 @@ export function SettingsPage() {
 
     // Preferences State
     const [preferences, setPreferences] = useState({
-        emailNotifications: true,
-        browserPush: false,
-        profileVisibility: true, // Matches mentorData.status usually
-        showEmail: false,
-        language: 'en-US'
-    });
-
-    // Theme State
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        const saved = localStorage.getItem('theme');
-        return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        emailNotifications: user?.user_metadata?.preferences?.emailNotifications ?? true,
+        browserPush: user?.user_metadata?.preferences?.browserPush ?? false,
+        profileVisibility: user?.user_metadata?.preferences?.profileVisibility ?? true, // Matches mentorData.status usually
+        showEmail: user?.user_metadata?.preferences?.showEmail ?? false,
+        language: user?.user_metadata?.preferences?.language ?? 'en-US'
     });
 
     // Load Data
@@ -63,17 +51,6 @@ export function SettingsPage() {
         };
         loadData();
     }, [isMentorView, user]);
-
-    // Toggle Theme
-    useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
-    }, [isDarkMode]);
 
     /* --- Handlers --- */
 
@@ -167,7 +144,7 @@ export function SettingsPage() {
     const SettingSection = ({ title, children, icon: Icon }: { title: string, children: React.ReactNode, icon: any }) => (
         <div className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden mb-6">
             <div className="px-8 py-6 border-b border-border flex items-center gap-3">
-                <div className="p-2 bg-primary/10 text-primary rounded-xl">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
                     <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-card-foreground">{title}</h3>
@@ -200,7 +177,7 @@ export function SettingsPage() {
         <div className="flex items-center justify-between group text-left">
             <div className="flex gap-4">
                 {ItemIcon && (
-                    <div className="mt-1 p-2 bg-muted text-muted-foreground rounded-lg group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                    <div className="mt-1 p-2 bg-muted text-muted-foreground rounded-lg group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
                         <ItemIcon className="w-4 h-4" />
                     </div>
                 )}
@@ -212,14 +189,14 @@ export function SettingsPage() {
             {customRight ? customRight : toggle !== undefined ? (
                 <button
                     onClick={onToggle}
-                    className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${isToggled ? 'bg-primary' : 'bg-muted'}`}
+                    className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${isToggled ? 'bg-indigo-600' : 'bg-muted'}`}
                 >
                     <div className={`absolute top-1 w-4 h-4 rounded-full bg-background transition-transform ${isToggled ? 'left-7' : 'left-1'}`} />
                 </button>
             ) : action ? (
                 <button
                     onClick={action}
-                    className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-primary flex-shrink-0"
+                    className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-indigo-600 flex-shrink-0"
                 >
                     <ChevronRight className="w-5 h-5" />
                 </button>
@@ -236,7 +213,7 @@ export function SettingsPage() {
                         <h1 className="text-3xl font-black text-foreground tracking-tight">Settings</h1>
                         <p className="text-muted-foreground mt-1 font-medium">Manage your account preferences and security.</p>
                     </div>
-                    <div className="px-4 py-2 bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-amber-100 dark:border-amber-900/50">
+                    <div className="px-4 py-2 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest rounded-xl border border-amber-100">
                         {isMentorView ? 'Mentor Account' : 'Student Account'}
                     </div>
                 </div>
@@ -244,7 +221,7 @@ export function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Navigation Sidebar */}
                     <div className="md:col-span-1 space-y-2">
-                        <button className="w-full flex items-center gap-3 px-6 py-4 bg-primary text-primary-foreground rounded-[1.5rem] font-bold text-sm shadow-xl shadow-primary/20 transition-transform active:scale-95">
+                        <button className="w-full flex items-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-[1.5rem] font-bold text-sm shadow-xl shadow-indigo-200 transition-transform active:scale-95">
                             <User className="w-5 h-5" />
                             General
                         </button>
@@ -292,10 +269,10 @@ export function SettingsPage() {
                                                                     type="number"
                                                                     value={newHourlyRate}
                                                                     onChange={(e) => setNewHourlyRate(e.target.value)}
-                                                                    className="w-20 pl-6 pr-2 py-1 bg-muted border border-border rounded-lg text-sm text-foreground focus:outline-none focus:border-primary"
+                                                                    className="w-20 pl-6 pr-2 py-1 bg-muted border border-border rounded-lg text-sm text-foreground focus:outline-none focus:border-indigo-500"
                                                                 />
                                                             </div>
-                                                            <button onClick={handleUpdateHourlyRate} className="p-1.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
+                                                            <button onClick={handleUpdateHourlyRate} className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                                                                 <ChevronRight className="w-4 h-4" />
                                                             </button>
                                                             <button onClick={() => setIsEditingRate(false)} className="p-1.5 text-muted-foreground hover:text-foreground">
@@ -305,7 +282,7 @@ export function SettingsPage() {
                                                     ) : (
                                                         <button
                                                             onClick={() => setIsEditingRate(true)}
-                                                            className="text-xs font-bold text-primary hover:text-primary/80 bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
+                                                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
                                                         >
                                                             Edit
                                                         </button>
@@ -321,23 +298,13 @@ export function SettingsPage() {
                         {/* Appearance & Preferences */}
                         <SettingSection title="Preferences" icon={Sun}>
                             <SettingItem
-                                label="Dark Mode"
-                                description="Switch between light and dark themes."
+                                label="Email Notifications"
+                                description="Receive updates via email"
                                 toggle={true}
-                                isToggled={isDarkMode}
-                                onToggle={() => setIsDarkMode(!isDarkMode)}
-                                icon={isDarkMode ? Moon : Sun}
+                                isToggled={preferences.emailNotifications}
+                                onToggle={() => handleUpdatePreference('emailNotifications', !preferences.emailNotifications)}
+                                icon={Mail}
                             />
-                            <div className="pt-4 border-t border-border">
-                                <SettingItem
-                                    label="Email Notifications"
-                                    description="Receive updates via email"
-                                    toggle={true}
-                                    isToggled={preferences.emailNotifications}
-                                    onToggle={() => handleUpdatePreference('emailNotifications', !preferences.emailNotifications)}
-                                    icon={Mail}
-                                />
-                            </div>
                             <div className="pt-4 border-t border-border">
                                 <SettingItem
                                     label="Browser Push"
@@ -411,14 +378,14 @@ export function SettingsPage() {
                                                 placeholder="New Email"
                                                 value={newEmail}
                                                 onChange={(e) => setNewEmail(e.target.value)}
-                                                className="w-full pl-3 pr-2 py-1.5 bg-muted border border-border rounded-lg text-sm text-foreground focus:outline-none focus:border-primary"
+                                                className="w-full pl-3 pr-2 py-1.5 bg-muted border border-border rounded-lg text-sm text-foreground focus:outline-none focus:border-indigo-500"
                                             />
                                             <div className="flex gap-2 justify-end">
                                                 <button onClick={() => setIsChangingEmail(false)} className="px-3 py-1 text-xs font-bold text-muted-foreground bg-muted hover:bg-muted/80 rounded-lg">Cancel</button>
                                                 <button
                                                     onClick={handleChangeEmail}
                                                     disabled={emailLoading}
-                                                    className="px-3 py-1 text-xs font-bold text-primary-foreground bg-primary rounded-lg disabled:opacity-50"
+                                                    className="px-3 py-1 text-xs font-bold text-white bg-indigo-600 rounded-lg disabled:opacity-50"
                                                 >
                                                     {emailLoading ? '...' : 'Verify'}
                                                 </button>
@@ -427,7 +394,7 @@ export function SettingsPage() {
                                     ) : (
                                         <button
                                             onClick={() => setIsChangingEmail(true)}
-                                            className="text-xs font-bold text-primary hover:text-primary/80 bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
+                                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
                                         >
                                             Change
                                         </button>
@@ -435,7 +402,7 @@ export function SettingsPage() {
                                 }
                             />
 
-                            <div className="pt-6 mt-6 border-t border-red-50 dark:border-red-900/30 flex flex-col gap-4">
+                            <div className="pt-6 mt-6 border-t border-red-50 flex flex-col gap-4">
                                 <button
                                     onClick={() => signOut()}
                                     className="flex items-center gap-3 px-6 py-4 bg-muted/50 text-muted-foreground hover:bg-muted rounded-2xl font-bold text-sm transition-colors group"
@@ -445,7 +412,7 @@ export function SettingsPage() {
                                 </button>
                                 <button
                                     onClick={handleDeleteAccount}
-                                    className="flex items-center gap-3 px-6 py-4 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 rounded-2xl font-bold text-sm transition-colors"
+                                    className="flex items-center gap-3 px-6 py-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-2xl font-bold text-sm transition-colors"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                     Delete My Account
@@ -458,14 +425,14 @@ export function SettingsPage() {
 
                         {/* Legal & Support Footer */}
                         <div className="space-y-6">
-                            <div className="bg-primary rounded-[2.5rem] p-8 text-primary-foreground relative overflow-hidden group">
+                            <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
                                 <div className="relative z-10">
                                     <h4 className="text-xl font-bold mb-2">Need Help?</h4>
-                                    <p className="text-primary-foreground/70 text-sm mb-6">Our dedicated support team is available 24/7 to assist you with any questions.</p>
+                                    <p className="text-indigo-200 text-sm mb-6">Our dedicated support team is available 24/7 to assist you with any questions.</p>
                                     <a
                                         href="mailto:support@mentozy.com"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-background text-foreground rounded-xl font-bold text-sm hover:bg-muted transition-colors"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-white text-indigo-900 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-colors"
                                     >
                                         <MessageCircle className="w-4 h-4" />
                                         Contact Support
@@ -474,16 +441,16 @@ export function SettingsPage() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <a href="#" className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl hover:border-primary/30 transition-all group">
+                                <a href="#" className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl hover:border-indigo-100 transition-all group">
                                     <div className="flex items-center gap-3">
-                                        <FileText className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
+                                        <FileText className="w-5 h-5 text-muted-foreground group-hover:text-indigo-600" />
                                         <span className="text-sm font-bold text-card-foreground">Terms of Service</span>
                                     </div>
                                     <ExternalLink className="w-4 h-4 text-muted-foreground" />
                                 </a>
-                                <a href="#" className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl hover:border-primary/30 transition-all group">
+                                <a href="#" className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl hover:border-indigo-100 transition-all group">
                                     <div className="flex items-center gap-3">
-                                        <Shield className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
+                                        <Shield className="w-5 h-5 text-muted-foreground group-hover:text-indigo-600" />
                                         <span className="text-sm font-bold text-card-foreground">Privacy Policy</span>
                                     </div>
                                     <ExternalLink className="w-4 h-4 text-muted-foreground" />
@@ -493,7 +460,7 @@ export function SettingsPage() {
                             <div className="flex flex-col items-center justify-center py-8">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                                     <span className="text-xl font-black text-foreground">Mentozy</span>
-                                    <div className="w-1.5 h-1.5 bg-primary rounded-sm"></div>
+                                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-sm"></div>
                                 </div>
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Version 1.0.4 • © 2026 Mentozy Inc.</p>
                             </div>
